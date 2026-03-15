@@ -1,0 +1,6 @@
+streamlit
+pymongo
+pydantic
+pandas
+python-dotenv
+certifi
