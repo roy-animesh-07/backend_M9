@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 from backend_service import process_encounter_data, fetch_past_reports
 import uuid
+from datetime import date
 
 st.set_page_config(page_title="Respiratory Symptom Diagnosis", layout="wide")
 
@@ -20,7 +21,11 @@ if page == "New Diagnosis":
         col1, col2 = st.columns(2)
         with col1:
             patient_name = st.text_input("Name")
-            patient_dob = st.date_input("Date of Birth")
+            patient_dob = st.date_input(
+                "Date of Birth",
+                min_value=date(1900, 1, 1),
+                max_value=date.today()
+            )
         with col2:
             patient_gender = st.selectbox("Gender", ["Male", "Female", "Other"])
             
