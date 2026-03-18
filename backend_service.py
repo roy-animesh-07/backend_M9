@@ -8,17 +8,44 @@ from database import (
 )
 
 def calculate_disease_probability(symptom_data, cough_data, breath_data, smoking_data, exposure_data):
-    # Mock Diagnostic Engine
+    base_score = 10
+    target_disease = "Unknown"
+    risk_level = "Low"
+    if smoking_data.get("SmokingStatus", "").lower() in ["current", "former"]:
+        base_score += 30
+        
+    if exposure_data.get("ExposureType", "").lower() != "none" and exposure_data.get("ExposureType", "") != "":
+        base_score += 20
+        
+    if cough_data.get("CoughType", "").lower() == "chronic":
+        base_score += 15
+        
+    if "wheeze" in breath_data.get("SoundType", "").lower():
+        base_score += 15
+        target_disease = "Asthma / COPD"
+    elif "crackle" in breath_data.get("SoundType", "").lower():
+        base_score += 20
+        target_disease = "Pneumonia"
+        
+    if base_score > 80:
+        risk_level = "High"
+    elif base_score > 40:
+        risk_level = "Moderate"
+        
+    probability_score = min(base_score, 100)
+    
+    if target_disease == "Unknown" and probability_score > 50:
+        target_disease = "General Respiratory Infection"
+        
     return {
-        "TargetDisease": "Pending Analysis",
-        "ProbabilityScore": 0,
-        "RiskLevel": "Pending",
-        "AlgorithmVersion": "v0.0-pending"
+        "TargetDisease": target_disease,
+        "ProbabilityScore": probability_score,
+        "RiskLevel": risk_level,
+        "AlgorithmVersion": "v1.0-mock"
     }
 
 def process_encounter_data(patient, encounter, symptom, cough, breath, smoking, exposure):
     try:
-        # Link relations using IDs
         patient_id = patient.get("PatientID", str(uuid.uuid4()))
         patient["PatientID"] = patient_id
         
