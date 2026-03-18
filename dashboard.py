@@ -55,7 +55,7 @@ with tabs[1]:
     st.write("Database Entity Relationship Diagram")
 
     st.image(
-        "er_diagram-2.jpg",
+        "ER.png",
         use_container_width=True
     )
 
