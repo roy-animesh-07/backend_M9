@@ -206,6 +206,10 @@ def run_diagnosis_app():
 
             df = pd.DataFrame(response["data"])
 
+            for col in df.columns:
+                if 'ID' in col or col.endswith('Id'):
+                    df[col] = df[col].apply(lambda x: f"{str(x)[:8]}..." if pd.notnull(x) and len(str(x)) > 12 else x)
+
             st.dataframe(df, use_container_width=True)
 
         else:
