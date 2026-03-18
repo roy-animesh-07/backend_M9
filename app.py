@@ -1,8 +1,14 @@
 import streamlit as st
 import pandas as pd
-from backend_service import process_encounter_data, fetch_past_reports
 import uuid
 from datetime import date
+import requests
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+API_BASE_URL = os.getenv("API_BASE_URL", "http://127.0.0.1:10000")
 
 
 def run_diagnosis_app():
@@ -135,7 +141,7 @@ def run_diagnosis_app():
                 encounter_data = {
                     "EncounterID": str(uuid.uuid4()),
                     "PatientID": patient_data["PatientID"],
-                    "EncounterDate": encounter_date,
+                    "EncounterDate": str(encounter_date),
                     "EncounterType": encounter_type
                 }
 
@@ -172,15 +178,21 @@ def run_diagnosis_app():
                     "Setting": setting
                 }
 
-                result = process_encounter_data(
-                    patient_data,
-                    encounter_data,
-                    symptom_data,
-                    cough_data,
-                    breath_data,
-                    smoking_data,
-                    exposure_data
-                )
+                payload = {
+                    "patient": patient_data,
+                    "encounter": encounter_data,
+                    "symptom": symptom_data,
+                    "cough": cough_data,
+                    "breath": breath_data,
+                    "smoking": smoking_data,
+                    "exposure": exposure_data
+                }
+
+                try:
+                    res = requests.post(f"{API_BASE_URL}/process", json=payload)
+                    result = res.json()
+                except Exception as e:
+                    result = {"success": False, "message": str(e)}
 
                 if result["success"]:
                     st.success("Encounter processed successfully")
@@ -200,7 +212,12 @@ def run_diagnosis_app():
 
         st.header("Past Diagnostic Reports")
 
-        response = fetch_past_reports()
+        # 🔥 NEW (API CALL instead of direct function)
+        try:
+            res = requests.get(f"{API_BASE_URL}/reports")
+            response = res.json()
+        except Exception as e:
+            response = {"success": False, "message": str(e)}
 
         if response["success"]:
 
@@ -208,10 +225,11 @@ def run_diagnosis_app():
 
             for col in df.columns:
                 if 'ID' in col or col.endswith('Id'):
-                    df[col] = df[col].apply(lambda x: f"{str(x)[:8]}..." if pd.notnull(x) and len(str(x)) > 12 else x)
+                    df[col] = df[col].apply(
+                        lambda x: f"{str(x)[:8]}..." if pd.notnull(x) and len(str(x)) > 12 else x
+                    )
 
             st.dataframe(df, use_container_width=True)
 
         else:
-
             st.error(response["message"])
