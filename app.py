@@ -32,8 +32,8 @@ if page == "🏠 Home":
     st.subheader("🔄 Data Flow Engine")
     st.markdown("""
     1. **Data Collection (`app.py`)**: Data is captured via the frontend Streamlit interface and structured into medical dictionaries. 
-    2. **Orchestration (`backend_service.py`)**: The system assigns primary keys (UUIDs) and propagates foreign keys across related datasets.
-    3. **Persistence (`database.py`)**: Data is safely stored across 8 decoupled MongoDB collections using `pymongo`.
+    2. **Orchestration (`service.py`)**: The system assigns primary keys (UUIDs) and propagates foreign keys across related datasets.
+    3. **Persistence (`db.py`)**: Data is safely stored across 8 decoupled MongoDB collections using `pymongo`.
     4. **Diagnostic Computation**: The logical inference engine processes the data and determines a `ProbabilityScore` and `RiskLevel`.
     """)
     
@@ -232,7 +232,7 @@ elif page == "📋 Tables":
     db = get_db()
     
     collections_to_show = {
-        "患者 (Patients)": "patients",
+        "Patients": "patients",
         "Encounters": "clinical_encounters",
         "Symptoms": "respiratory_symptoms",
         "Cough Data": "cough_characteristics",
