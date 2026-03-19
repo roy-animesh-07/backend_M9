@@ -9,6 +9,7 @@ import os
 load_dotenv()
 
 API_BASE_URL = os.getenv("API_BASE_URL", "http://127.0.0.1:10000")
+# API_BASE_URL = "http://127.0.0.1:8000"
 
 
 def run_diagnosis_app():
@@ -212,7 +213,6 @@ def run_diagnosis_app():
 
         st.header("Past Diagnostic Reports")
 
-        # 🔥 NEW (API CALL instead of direct function)
         try:
             res = requests.get(f"{API_BASE_URL}/reports")
             response = res.json()
@@ -223,13 +223,52 @@ def run_diagnosis_app():
 
             df = pd.DataFrame(response["data"])
 
-            for col in df.columns:
-                if 'ID' in col or col.endswith('Id'):
-                    df[col] = df[col].apply(
-                        lambda x: f"{str(x)[:8]}..." if pd.notnull(x) and len(str(x)) > 12 else x
-                    )
+            if not df.empty:
 
-            st.dataframe(df, use_container_width=True)
+                df_display = df.copy()
+
+                for col in df_display.columns:
+                    if 'ID' in col or col.endswith('Id'):
+                        df_display[col] = df_display[col].apply(
+                            lambda x: f"{str(x)[:8]}..." if pd.notnull(x) and len(str(x)) > 12 else x
+                        )
+
+                st.dataframe(df_display, use_container_width=True)
+
+                st.markdown("---")
+                st.subheader("🔍 View Detailed Report")
+
+                # Select report
+                selected_idx = st.selectbox(
+                    "Select a report",
+                    options=range(len(df)),
+                    format_func=lambda x: f"{df.iloc[x]['PatientName']} | {df.iloc[x]['TargetDisease']} | {df.iloc[x]['EncounterDate']}"
+                )
+
+                selected = df.iloc[selected_idx]
+
+                st.markdown("### 🧾 Report Details")
+
+                col1, col2 = st.columns(2)
+
+                with col1:
+                    st.info(f"""
+                    **Patient Name:** {selected.get('PatientName')}  
+                    **Patient ID:** {selected.get('PatientID')}  
+                    **Encounter ID:** {selected.get('EncounterID')}  
+                    **Date:** {selected.get('EncounterDate')}
+                    """)
+
+                with col2:
+                    st.success(f"""
+                    **Disease:** {selected.get('TargetDisease')}  
+                    **Risk Level:** {selected.get('RiskLevel')}  
+                    **Probability Score:** {selected.get('ProbabilityScore')}%  
+                    """)
+                st.progress(int(selected.get("ProbabilityScore", 0)))
+
+            else:
+                st.info("No reports available.")
 
         else:
             st.error(response["message"])
